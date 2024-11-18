@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Danh sách xe</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    table, th, td {
+      border: 1px solid black;
+    }
+
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    form {
+      margin-top: 20px;
+    }
+
+    input, textarea, button {
+      margin: 5px 0;
+      padding: 8px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+<h1>Danh sách xe</h1>
+
+<!-- Hiển thị danh sách xe trong bảng -->
+<table>
+  <thead>
+  <tr>
+    <th>Tên xe</th>
+    <th>Hãng sản xuất</th>
+    <th>Năm sản xuất</th>
+    <th>Giá bán</th>
+    <th>Mô tả</th>
+  </tr>
+  </thead>
+  <tbody id="car-list">
+  <!-- Danh sách xe sẽ được thêm vào đây bằng JavaScript -->
+  </tbody>
+</table>
+
+<!-- Form thêm xe mới -->
+<h2>Thêm xe mới</h2>
+<form id="add-car-form">
+  <label for="name">Tên xe:</label>
+  <input type="text" id="name" name="name" required>
+
+  <label for="brand">Hãng sản xuất:</label>
+  <input type="text" id="brand" name="brand" required>
+
+  <label for="year">Năm sản xuất:</label>
+  <input type="number" id="year" name="year" min="1886" required>
+
+  <label for="price">Giá bán:</label>
+  <input type="number" id="price" name="price" min="0" required>
+
+  <label for="description">Mô tả:</label>
+  <textarea id="description" name="description" rows="4" required></textarea>
+
+  <button type="submit">Thêm xe</button>
+</form>
+
+<script>
+  const apiBaseUrl = 'http://localhost:3000'; // Thay thế bằng URL API thực tế của bạn
+
+  // Hàm fetch danh sách xe và hiển thị trong bảng
+  function loadCars() {
+    fetch(`${apiBaseUrl}/car`)
+            .then(response => {
+              if (!response.ok) {
+                throw new Error('Lỗi khi tải danh sách xe.');
+              }
+              return response.json();
+            })
+            .then(data => {
+              const carList = document.getElementById('car-list');
+              carList.innerHTML = ''; // Xóa nội dung cũ
+              if (data && data.length > 0) {
+                data.forEach(car => {
+                  const row = document.createElement('tr');
+                  row.innerHTML = `
+              <td>${car.name}</td>
+              <td>${car.brand}</td>
+              <td>${car.year}</td>
+              <td>${car.price}</td>
+              <td>${car.description}</td>
+            `;
+                  carList.appendChild(row);
+                });
+              } else {
+                carList.innerHTML = '<tr><td colspan="5" style="text-align:center;">Không có xe nào trong danh sách.</td></tr>';
+              }
+            })
+            .catch(error => {
+              alert('Có lỗi xảy ra khi tải danh sách xe: ' + error.message);
+            });
+  }
+
+  // Xử lý form thêm xe mới
+  const addCarForm = document.getElementById('add-car-form');
+  addCarForm.addEventListener('submit', (event) => {
+    event.preventDefault(); // Ngăn chặn form gửi đi
+    const newCar = {
+      name: document.getElementById('name').value,
+      brand: document.getElementById('brand').value,
+      year: parseInt(document.getElementById('year').value),
+      price: parseFloat(document.getElementById('price').value),
+      description: document.getElementById('description').value,
+    };
+
+    // Gửi dữ liệu xe mới đến API
+    fetch(`${apiBaseUrl}/car`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(newCar),
+    })
+            .then(response => {
+              if (!response.ok) {
+                throw new Error('Lỗi khi thêm xe.');
+              }
+              return response.json();
+            })
+            .then(data => {
+              alert('Xe đã được thêm thành công!');
+              // Làm mới danh sách xe
+              loadCars();
+              // Xóa dữ liệu form
+              addCarForm.reset();
+            })
+            .catch(error => {
+              alert('Có lỗi xảy ra khi thêm xe: ' + error.message);
+            });
+  });
+
+  // Tải danh sách xe khi trang được tải
+  document.addEventListener('DOMContentLoaded', loadCars);
+</script>
+</body>
+</html>
